@@ -59,34 +59,38 @@ struct LLshape
 	{ { 1, 2 },{ 2,2 },{ 3,2 },{ 3,3 } } };
 }LLshape;
 
-void FieldPrint(int field[19][12],COLORREF color)
+void FieldPrint(int field[19][12],int line)
 {
-	for (int i = 1;i < 18;i++)
+	for (int i = line;i >= 0;i--)
 	{
 		for (int i1 = 1;i1 < 11;i1++)
 		{
 			if (field[i][i1] == 1)
 			{
-				setfillcolor(color);
-				fillrectangle(Wid*i1+1,Wid*i+1, Wid*(i1+1)-1, Wid*i+ Wid-1);
+				setfillcolor(getpixel(Wid*i1 + 10, Wid*i - 10));
+				setcolor(BLACK);
+				fillrectangle(Wid*i1,Wid*i, Wid*(i1+1), Wid*i+ Wid);
 			}
 		}
 	}
 };
 inline void setplay(int play[4][2], int ran1, int ran2, int dx, int dy);
-void conblock(int &,int &);
+void conblock(int &,int &,bool &);
 inline bool kickblock(int play[4][2], int field[19][12]);
 void clearblock(int linenum, int field[19][12]);
+COLORREF colorchoice(int);
+void clearblock(int field[19][12]);
 
 void main()
 {
 	start:
-	bool isfloor = 0;
-	int ran2, ran1;
+	bool isfloor = 0, skip = 0;
+	IMAGE up;
+	int ran2, ran1, rancolor,reran1,reran2,recolor;
 	stringstream sc;
 	TCHAR sco;
-	int field[19][12],score=0;
-	initgraph(440, 550);
+	int field[19][12],score=0,preplay[4][2];
+	initgraph(490, 550);
 	time_t start, end;
 	for (auto &a : field)
 	{
@@ -109,9 +113,15 @@ void main()
 	int predx, preran, dx = 3, dy = 0, play[4][2], pre[4][2];
 	ran1 = rand() % 5;
 	ran2 = rand() % 4;
+	rancolor = rand() % 7;
+	reran1 = rand() % 5;
+	reran2 = rand() % 4;
+	recolor = rand() % 7;
 	setplay(play, ran1, ran2, dx, dy);
 	while (1)
 	{
+		setplay(preplay, reran1, reran2, 12, 10);
+		Printblock(preplay, colorchoice(recolor));
 		sc << score;
 		sc >> sco;
 		settextcolor(CYAN);
@@ -123,7 +133,7 @@ void main()
 		srand((unsigned)time(NULL));
 		predx = dx;
 		preran = ran2;
-		conblock(dx, ran2);
+		conblock(dx, ran2,skip);
 		setplay(play, ran1, ran2, dx, dy);
 		if (kickblock(play, field))
 		{
@@ -135,7 +145,7 @@ void main()
 			setplay(play, ran1, ran2, predx, dy);
 			dx = predx;
 		}
-		Printblock(play, YELLOW);
+		Printblock(play, colorchoice(rancolor));
 		for (auto &pl : play)
 		{
 			if (field[pl[1] + 1][pl[0]] == 1)
@@ -143,7 +153,10 @@ void main()
 				isfloor = 1;
 			}
 		}
-		Sleep(100-score);
+		if (!skip)
+		{
+			Sleep(100 - score);
+		}
 		if (_kbhit())
 		{
 			isfloor = 0;
@@ -158,8 +171,14 @@ void main()
 			dy = 0;
 			dx = 3;
 			isfloor = 0;
-			ran1 = rand() % 5;
-			ran2 = rand() % 4;
+			Printblock(preplay, BLACK);
+			ran1 = reran1;
+			ran2 = reran2;
+			rancolor = recolor;
+			reran1 = rand() % 5;
+			reran2 = rand() % 4;
+			recolor = rand() % 7;
+			skip = 0;
 		}
 		else
 		{
@@ -181,14 +200,15 @@ void main()
 			if (isscore[i])
 			{
 				clearblock(i, field);
-				FieldPrint(field, YELLOW);
+				FieldPrint(field,i);
+				clearblock(field);
 				score++;
 			}
 			isscore[i] = 1;
 		}
 		for (int i = 1;i < 11;i++)
 		{
-			if (field[1][i] == 1)
+			if (field[2][i] == 1)
 			{
 				isdead = 1;
 			}
@@ -220,8 +240,6 @@ void main()
 
 void clearblock(int linenum,int field[19][12])
 {
-	setfillcolor(BLACK);
-	fillrectangle(30, 10, 330, 540);
 	for (int i=linenum;i>0;i--)
 	{
 		for (int i1 = 1; i1 < 11; i1++)
@@ -231,9 +249,25 @@ void clearblock(int linenum,int field[19][12])
 	}
 }
 
-void conblock(int &dx,int &ran1)
+void clearblock(int field[19][12])
 {
-	char ipt = 's';
+	for (int i = 17;i >0;i--)
+	{
+		for (int i1 = 1;i1 < 11;i1++)
+		{
+			if (field[i][i1] == 0)
+			{
+				setfillcolor(BLACK);
+				setcolor(BLACK);
+				fillrectangle(Wid*i1, Wid*i , Wid*(i1 + 1), Wid*i + Wid );
+			}
+		}
+	}
+}
+
+void conblock(int &dx,int &ran1,bool &skip)
+{
+	char ipt = '2';
 	if (_kbhit())
 	{
 		ipt = _getch();
@@ -254,7 +288,9 @@ void conblock(int &dx,int &ran1)
 			}
 		}
 		if (ipt == 's')
-		{}
+		{
+			skip = 1;
+		}
 	}
 }
 
@@ -327,5 +363,37 @@ inline void setplay(int play[4][2], int ran1, int ran2,int dx,int dy)
 		play[2][1] = LLshape.U[ran2][2][1] + dy;
 		play[3][0] = LLshape.U[ran2][3][0] + dx;
 		play[3][1] = LLshape.U[ran2][3][1] + dy;
+	}
+}
+
+COLORREF colorchoice(int ran)
+{
+	if (ran == 0)
+	{
+		return YELLOW;
+	}
+	else if (ran == 1)
+	{
+		return RED;
+	}
+	else if (ran == 2)
+	{
+		return GREEN;
+	}
+	else if (ran == 3)
+	{
+		return BLUE;
+	}
+	else if (ran == 4)
+	{
+		return CYAN;
+	}
+	else if (ran == 5)
+	{
+		return MAGENTA;
+	}
+	else if (ran == 6)
+	{
+		return BROWN;
 	}
 }

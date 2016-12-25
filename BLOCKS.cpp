@@ -87,8 +87,8 @@ void main()
 	bool isfloor = 0, skip = 0;
 	IMAGE up;
 	int ran2, ran1, rancolor,reran1,reran2,recolor;
-	stringstream sc;
-	TCHAR sco;
+	TCHAR sco[5];
+	TCHAR speed[5];
 	int field[19][12],score=0,preplay[4][2];
 	initgraph(490, 550);
 	time_t start, end;
@@ -122,14 +122,20 @@ void main()
 	{
 		setplay(preplay, reran1, reran2, 12, 10);
 		Printblock(preplay, colorchoice(recolor));
-		sc << score;
-		sc >> sco;
+		_stprintf_s(sco, _T("%d"), score);
+		_stprintf_s(speed, _T("%d"), (150 - 10 * score));
 		settextcolor(CYAN);
 		settextstyle(35, 0, "Score");
 		outtextxy(340, 150, "Score");
 		settextcolor(WHITE);
 		settextstyle(50, 0, " ");
 		outtextxy(370, 190, sco);
+		settextstyle(35, 0, " ");
+		outtextxy(340, 10, "Speed");
+		outtextxy(340, 260, "NEXT£º");
+		settextstyle(25, 0, " ");
+		outtextxy(400, 40, "ms/¿é");
+		outtextxy(340, 40, speed);
 		srand((unsigned)time(NULL));
 		predx = dx;
 		preran = ran2;
@@ -155,7 +161,7 @@ void main()
 		}
 		if (!skip)
 		{
-			Sleep(100 - score);
+			Sleep(150 - 10*score);
 		}
 		if (_kbhit())
 		{
